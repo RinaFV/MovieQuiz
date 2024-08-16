@@ -14,11 +14,12 @@ final class MovieQuizViewController: UIViewController {
         let quizStepViewModel = convert(model: questions[currentQuestionIndex])
         show(step: quizStepViewModel)
     }
+
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
-        
+       
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
