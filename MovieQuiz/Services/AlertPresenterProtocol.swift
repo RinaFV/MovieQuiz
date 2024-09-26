@@ -6,3 +6,6 @@
 //
 
 import Foundation
+protocol AlertPresenterProtocol {
+    func presenter(model: AlertModel)
+}
