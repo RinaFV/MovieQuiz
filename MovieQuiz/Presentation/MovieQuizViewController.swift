@@ -19,8 +19,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
-        
-        statisticService = StatisticService()
 
         firstSetup()
         questionFactory?.requestNextQuestion()
