@@ -5,6 +5,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     @IBOutlet private var textLabel: UILabel!
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var counterLabel: UILabel!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    
     
     private var currentQuestionIndex = 0
     private var correctAnswers = 0
@@ -19,10 +21,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
-
         firstSetup()
-        questionFactory?.requestNextQuestion()
-    
+        showLoadingIndicator()
+        questionFactory?.loadData()
+        
     }
     
     // MARK: - Actions
@@ -59,15 +61,18 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     
-    struct ViewModel {
-        let image: UIImage
-        let question: String
-        let questionNumber: String
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription)
+    }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(
-            image: UIImage(named: model.image) ?? UIImage(),
+            image: UIImage(data: model.image) ?? UIImage(),
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionAmount)")
     }
@@ -114,27 +119,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         alertPresenter?.presenter(model: alertModel)
     }
     
-// 
-//    private func showNextQuestionOrResults() {
-////        let model = AlertModel (title: "Этот раунд окончен!",
-////                                message: "Ваш результат \(correctAnswers)/10",
-////                                buttonText: "Сыграть еще раз") {[weak self] in
-////            guard let self = self else {return}
-////            self.currentQuestionIndex = 0
-////            self.correctAnswers = 0
-////            questionFactory?.requestNextQuestion()}
-//        
-//        if currentQuestionIndex == questionAmount - 1 {
-//
-//            alertPresenter?.presenter(model: model)
-//        } else {
-//            currentQuestionIndex += 1
-//            
-//            questionFactory?.requestNextQuestion()
-//            
-//        }
-//    }
-    
     private func showNextQuestionOrResults() {
         if currentQuestionIndex == questionAmount - 1 {
             var text = "Ваш результат: \(correctAnswers)/\(questionAmount)\n"
@@ -159,7 +143,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
         // настройка с делегатом
     private func firstSetup() {
-        let questionFactory = QuestionFactory()
+        let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory.setup(delegate: self)
         self.questionFactory = questionFactory
         
@@ -168,7 +152,30 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.alertPresenter = alertPresenter
         statisticService = StatisticService()
     }
-        
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
+    }
+    
+    private func hideLoadingIndicator() {
+        activityIndicator.isHidden = true
+    }
+    
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator() // скрываем индикатор загрузки
+        let model = AlertModel(title: "Ошибка",
+                                   message: message,
+                                   buttonText: "Попробовать еще раз") { [weak self] in
+                guard let self = self else { return }
+                
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                
+                self.questionFactory?.requestNextQuestion()
+            }
+            
+            alertPresenter?.presenter(model: model)
+        }
     }
         
     
