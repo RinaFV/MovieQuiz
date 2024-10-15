@@ -5,7 +5,8 @@
 //  Created by Irina Vasileva on 25.09.2024.
 //
 
-import Foundation
+import UIKit
+
 protocol AlertPresenterProtocol {
-    func presenter(model: AlertModel)
+    func present(alert: AlertModel, id: String?)
 }
